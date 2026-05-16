@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Badge } from "@/components/ui/badge";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminAgreementsPage() {
   const agreements = await prisma.agreement.findMany({
     orderBy: { updatedAt: "desc" },

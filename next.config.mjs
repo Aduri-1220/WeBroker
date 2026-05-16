@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  // Vercel expects the default Next output; standalone is for Docker (see Dockerfile).
+  ...(process.env.DOCKER_BUILD === "1" ? { output: "standalone" } : {}),
   reactStrictMode: true,
   images: {
     remotePatterns: [

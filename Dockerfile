@@ -29,6 +29,7 @@ RUN mkdir -p public
 # prisma generate requires DATABASE_URL syntax; DB is never contacted during generate.
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="postgresql://_:PLACEHOLDER@_:5432/_"
+ENV DOCKER_BUILD=1
 
 RUN npx prisma generate \
   && npm run build
