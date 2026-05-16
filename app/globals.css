@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    --font-serif:
+      "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia,
+      "Times New Roman", serif;
+    --font-signature:
+      "Snell Roundhand", "Apple Chancery", "Lucida Handwriting", "Segoe Script",
+      cursive;
+
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 25%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 9% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 224 71% 4%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .bg-dot {
+    background-image: radial-gradient(
+      rgba(15, 23, 42, 0.12) 1px,
+      transparent 1px
+    );
+    background-size: 20px 20px;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-600 via-brand-500 to-brand-700 bg-clip-text text-transparent;
+  }
+
+  /* Wooden desk gradient backdrop for the agreement scene */
+  .bg-desk {
+    background-color: #1c1410;
+    background-image:
+      radial-gradient(
+        ellipse 90% 60% at 50% 100%,
+        rgba(255, 200, 140, 0.18),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 50% 0%,
+        rgba(0, 0, 0, 0.6),
+        transparent 70%
+      ),
+      repeating-linear-gradient(
+        92deg,
+        #2a1c14 0px,
+        #261912 6px,
+        #2e1f15 14px,
+        #261912 22px,
+        #321f14 30px
+      );
+  }
+
+  /* Off-white paper with subtle fiber texture */
+  .bg-paper {
+    background-color: #fbf6e7;
+    background-image:
+      radial-gradient(rgba(120, 90, 40, 0.05) 1px, transparent 1.4px),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.65) 0%,
+        rgba(240, 224, 180, 0.35) 100%
+      );
+    background-size:
+      6px 6px,
+      100% 100%;
+  }
+
+  /* Faint horizontal rules like a legal pad */
+  .paper-lines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 27px,
+      rgba(60, 40, 20, 0.07) 28px
+    );
+  }
+
+  .font-signature {
+    font-family: var(--font-signature);
+  }
+
+  .shadow-paper {
+    box-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.04),
+      0 12px 24px -8px rgba(0, 0, 0, 0.45),
+      0 32px 80px -20px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* Print styles for the agreement draft */
+@media print {
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 1in !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  @page {
+    size: A4;
+    margin: 0.5in;
+  }
+}

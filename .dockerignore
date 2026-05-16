@@ -1,0 +1,36 @@
+# Dependencies and build outputs
+node_modules
+.next
+dist
+coverage
+
+# Git and tooling
+.git
+.gitignore
+.cursor
+.idea
+.vscode
+*.md
+!README.md
+
+# Local env / secrets — inject at runtime
+.env
+.env.*
+!.env.example
+
+# Deploy / SaaS artifacts
+.vercel
+
+# Tests (not needed in production image)
+tests
+playwright.config.ts
+vitest.config.ts
+blob-report
+
+# Generated test reports in dev
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# TypeScript incremental cache
+tsconfig.tsbuildinfo

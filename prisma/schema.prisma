@@ -1,0 +1,158 @@
+// Prisma schema for WeBroker rental agreement platform.
+// Uses PostgreSQL (hosted on Neon). Set DATABASE_URL to a Neon pooled connection
+// string in .env (e.g. postgresql://USER:PASSWORD@ep-xyz-pooler.region.aws.neon.tech/neondb?sslmode=require).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------- NextAuth core models --------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// -------- Application models --------
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  emailVerified DateTime?
+  name          String?
+  /// 10-digit Indian mobile (no country code), collected at email/password sign-up when provided.
+  phone         String?
+  image         String?
+  passwordHash  String?
+  role          String? // "OWNER" | "TENANT" | "BROKER"
+  state         String? // Indian state slug, e.g. "karnataka"
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  agreements          Agreement[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Agreement {
+  id             String   @id @default(cuid())
+  userId         String
+  status         String   @default("DRAFT") // DRAFT | PAID | E_STAMPING | E_SIGNING | DELIVERY | COMPLETED
+  /// FULL_DETAILS = skip draft upload step; UPLOAD_DRAFT = must attach PDF/DOCX before continuing.
+  wizardEntry    String?
+  propertyJson   String? // JSON string
+  ownerJson      String?
+  tenantJson     String?
+  termsJson      String?
+  clausesJson    String?
+  witnessesJson  String?
+  stampValue     Int? // in rupees
+  /// Optional: user-uploaded prior PDF/DOCX; structured wizard still drives the legal draft.
+  sourceDraftOriginalName String?
+  sourceDraftMime         String?
+  sourceDraftBlob         Bytes?
+  /// True when user continues without uploading (first wizard step completed).
+  sourceDraftSkipped      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addOns    AddOn[]
+  delivery  Delivery?
+  payment   Payment?
+}
+
+model AddOn {
+  id          String @id @default(cuid())
+  agreementId String
+  kind        String // ESIGN | NOTARY | EXTRA_COPY
+  qty         Int    @default(1)
+  unitPrice   Int // in rupees
+  agreement   Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+}
+
+model Delivery {
+  id          String  @id @default(cuid())
+  agreementId String  @unique
+  method      String // DIGITAL | SCANNED_ONLINE | STANDARD | EXPRESS
+  address     String?
+  trackingId  String?
+  /// Admin-uploaded scanned agreement PDF for SCANNED_ONLINE delivery; customer downloads from their account.
+  scannedCopyBlob         Bytes?
+  scannedCopyMime         String?
+  scannedCopyOriginalName String?
+  scannedCopyUploadedAt   DateTime?
+  agreement   Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id          String  @id @default(cuid())
+  agreementId String  @unique
+  amount      Int // in rupees, total incl. GST
+  status      String  @default("PENDING") // PENDING | SUCCESS | FAILED
+  /// MOCK | RAZORPAY — source of truth for how SUCCESS was recorded.
+  provider    String  @default("MOCK")
+  /// Razorpay order id (order_...) when using live/test checkout.
+  providerOrderId   String? @unique
+  /// Razorpay payment id (pay_...) after capture.
+  providerPaymentId String?
+  /// Customer-selected channel at checkout (UPI | CARD | NETBANKING). Null for legacy rows.
+  method      String?
+  mockTxnId   String?
+  createdAt   DateTime @default(now())
+  agreement   Agreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+}
+
+/// Deduplicate PSP webhooks (e.g. Razorpay retries the same event id).
+model PaymentWebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+}

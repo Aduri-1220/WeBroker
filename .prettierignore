@@ -1,0 +1,19 @@
+node_modules
+.next
+.vercel
+dist
+coverage
+
+# Logs and local env (may exist on disk)
+*.log
+.env
+.env.*
+
+# Test / CI artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+
+# Lockfiles (machine-generated noise)
+package-lock.json
