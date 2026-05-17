@@ -14,13 +14,19 @@ export function SiteFooter() {
           agreements with e-stamp &amp; e-sign.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-stone-500 sm:gap-4 sm:text-xs">
-          <a href="#" className="hover:text-stone-800">
+          <Link href="/privacy" className="hover:text-stone-800">
             Privacy
-          </a>
+          </Link>
+          <Link href="/cookies" className="hover:text-stone-800">
+            Cookies
+          </Link>
           <a href="#" className="hover:text-stone-800">
             Terms
           </a>
-          <a href="#" className="hover:text-stone-800">
+          <a
+            href="mailto:privacy@webroker.in"
+            className="hover:text-stone-800"
+          >
             Contact
           </a>
           <Link
