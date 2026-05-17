@@ -113,7 +113,8 @@ export default async function AgreementStatusPage({
             {delivery?.trackingId && (
               <KV label="Tracking" value={delivery.trackingId} />
             )}
-            {deliveryUsesExecutedCopyUpload(delivery?.method) && (
+            {delivery != null &&
+              deliveryUsesExecutedCopyUpload(delivery.method) && (
               <>
                 {!agreementStatusAllowsExecutedCopyDownload(
                   parsed.agreement.status,
@@ -134,7 +135,7 @@ export default async function AgreementStatusPage({
                         download
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        {delivery?.method === "DIGITAL"
+                        {delivery.method === "DIGITAL"
                           ? "Download digital copy"
                           : "Download scanned copy"}
                       </a>
