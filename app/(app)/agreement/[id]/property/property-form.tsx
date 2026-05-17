@@ -92,10 +92,10 @@ export function PropertyForm({
     }
   }
 
-  function toggleAmenity(value: string) {
+  function setAmenityChecked(value: string, checked: boolean) {
     const set = new Set(amenities);
-    if (set.has(value)) set.delete(value);
-    else set.add(value);
+    if (checked) set.add(value);
+    else set.delete(value);
     setValue("amenities", Array.from(set), { shouldDirty: true });
   }
 
@@ -308,22 +308,34 @@ export function PropertyForm({
       <div>
         <div className="text-sm font-medium text-slate-800">Amenities</div>
         <p className="mt-1 text-xs text-slate-500">
-          Optional — these show up in the inventory section of the agreement.
+          Optional — select all that apply. These show up in the inventory
+          section of the agreement.
         </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+        <div
+          className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3"
+          role="group"
+          aria-label="Property amenities"
+        >
           {AMENITIES.map((a) => {
+            const id = `amenity-${a.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}`;
             const checked = amenities.includes(a);
             return (
-              <label
+              <div
                 key={a}
-                className="flex cursor-pointer items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm transition-colors hover:border-brand-300"
+                className="flex cursor-pointer items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm transition-colors hover:border-brand-300 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
               >
                 <Checkbox
+                  id={id}
                   checked={checked}
-                  onCheckedChange={() => toggleAmenity(a)}
+                  onCheckedChange={(next) => {
+                    if (next === "indeterminate") return;
+                    setAmenityChecked(a, next);
+                  }}
                 />
-                {a}
-              </label>
+                <label htmlFor={id} className="cursor-pointer leading-none">
+                  {a}
+                </label>
+              </div>
             );
           })}
         </div>
