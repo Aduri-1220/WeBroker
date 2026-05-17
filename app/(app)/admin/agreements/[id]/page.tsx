@@ -8,6 +8,7 @@ import { formatDate, formatINR } from "@/lib/utils";
 import { StatusBadge } from "@/components/app/status-badge";
 import { DraftDocument } from "@/components/agreement/draft-document";
 import { AdminWorkflowAdvance } from "@/components/admin/admin-workflow-advance";
+import { deliveryUsesExecutedCopyUpload } from "@/lib/delivery-executed-copy";
 import { AdminScannedCopyUpload } from "@/components/admin/admin-scanned-copy-upload";
 import { Button } from "@/components/ui/button";
 import {
@@ -212,19 +213,22 @@ export default async function AdminAgreementDetailPage({
           </CardContent>
         </Card>
 
-        {agreement.delivery?.method === "SCANNED_ONLINE" ? (
+        {deliveryUsesExecutedCopyUpload(agreement.delivery?.method) ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Online scanned copy</CardTitle>
+              <CardTitle className="text-base">
+                Signed agreement PDF (digital / scanned)
+              </CardTitle>
               <CardDescription>
-                Upload the executed agreement as a PDF. The customer downloads
-                it from their agreement page under Delivery.
+                Upload the final PDF after e-stamping and Aadhaar e-sign so the
+                customer can download it from their agreement page once the flow
+                reaches Out for Delivery.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <AdminScannedCopyUpload
                 agreementId={params.id}
-                existingFileName={agreement.delivery.scannedCopyOriginalName}
+                existingFileName={agreement.delivery?.scannedCopyOriginalName ?? null}
               />
             </CardContent>
           </Card>
@@ -356,7 +360,7 @@ function addOnKindLabel(kind: string): string {
 
 function adminDeliveryMethodLabel(method: string): string {
   const map: Record<string, string> = {
-    DIGITAL: "Digital only",
+    DIGITAL: "Digital copy",
     SCANNED_ONLINE: "Online scanned copy",
     STANDARD: "Standard courier",
     EXPRESS: "Express courier",

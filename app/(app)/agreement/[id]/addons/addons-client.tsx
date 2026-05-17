@@ -224,9 +224,9 @@ export function AddOnsClient({
                 selected={delivery}
                 onSelect={setDelivery}
                 icon={Mail}
-                title="Digital only"
-                sub="Instant PDF · Free"
-                eta="Right after e-sign"
+                title="Digital copy"
+                sub="PDF in your account · Free"
+                eta="After e-stamp, e-sign & upload"
               />
               <DeliveryOption
                 method="SCANNED_ONLINE"

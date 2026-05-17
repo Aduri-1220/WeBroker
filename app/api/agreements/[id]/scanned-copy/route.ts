@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { agreementStatusAllowsExecutedCopyDownload } from "@/lib/delivery-executed-copy";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
@@ -12,16 +13,26 @@ export async function GET(
 
   const agreement = await prisma.agreement.findFirst({
     where: { id: params.id, userId: user.id },
-    select: { id: true },
+    select: { id: true, status: true },
   });
   if (!agreement) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (!agreementStatusAllowsExecutedCopyDownload(agreement.status)) {
+    return NextResponse.json(
+      {
+        error:
+          "Executed PDF is available from Out for Delivery onward, once e-stamping and e-signing are complete.",
+      },
+      { status: 403 },
+    );
+  }
+
   const row = await prisma.delivery.findFirst({
     where: {
       agreementId: params.id,
-      method: "SCANNED_ONLINE",
+      method: { in: ["DIGITAL", "SCANNED_ONLINE"] },
       scannedCopyBlob: { not: null },
     },
     select: {

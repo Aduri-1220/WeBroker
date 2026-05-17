@@ -28,7 +28,7 @@ export function AdminScannedCopyUpload({
     }
     const lower = file.name.toLowerCase();
     if (!lower.endsWith(".pdf") && file.type !== "application/pdf") {
-      toast.error("Only PDF files are allowed for the scanned copy");
+      toast.error("Only PDF files are allowed");
       return;
     }
 
@@ -47,7 +47,7 @@ export function AdminScannedCopyUpload({
           typeof data.error === "string" ? data.error : "Upload failed",
         );
       }
-      toast.success("Scanned copy saved");
+      toast.success("Signed agreement PDF saved");
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
@@ -65,8 +65,9 @@ export function AdminScannedCopyUpload({
         </p>
       ) : (
         <p className="text-sm text-slate-600">
-          No file uploaded yet. The customer will see a download button once a
-          PDF is saved.
+          No file uploaded yet. After you save a PDF and the workflow reaches{" "}
+          <span className="font-medium text-slate-800">Out for Delivery</span>,
+          the customer can download it from their agreement page.
         </p>
       )}
       <input
@@ -90,7 +91,7 @@ export function AdminScannedCopyUpload({
           ) : (
             <FileUp className="h-4 w-4" />
           )}
-          {existingFileName ? "Replace PDF" : "Upload scanned PDF"}
+          {existingFileName ? "Replace PDF" : "Upload signed PDF"}
         </Button>
         {existingFileName ? (
           <Button type="button" variant="ghost" size="sm" asChild>
@@ -104,7 +105,7 @@ export function AdminScannedCopyUpload({
         ) : null}
       </div>
       <p className="text-xs text-slate-500">
-        Use a single PDF scan of the executed agreement. Max 15 MB.
+        Stamped & e-signed executable agreement as a single PDF. Max 15 MB.
       </p>
     </div>
   );

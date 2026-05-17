@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { deliveryUsesExecutedCopyUpload } from "@/lib/delivery-executed-copy";
 import { getCurrentUser } from "@/lib/session";
 import { isAdminEmail } from "@/lib/admin";
 
@@ -23,7 +24,7 @@ export async function GET(
   const row = await prisma.delivery.findFirst({
     where: {
       agreementId: params.id,
-      method: "SCANNED_ONLINE",
+      method: { in: ["DIGITAL", "SCANNED_ONLINE"] },
       scannedCopyBlob: { not: null },
     },
     select: {
@@ -65,11 +66,11 @@ export async function POST(
       { status: 400 },
     );
   }
-  if (delivery.method !== "SCANNED_ONLINE") {
+  if (!deliveryUsesExecutedCopyUpload(delivery.method)) {
     return NextResponse.json(
       {
         error:
-          "Customer did not select online scanned copy delivery. Change delivery on the agreement or ask the customer to pick “Online scanned copy” in add-ons.",
+          "Customer did not choose digital delivery with team upload or online scanned copy. Change delivery under add-ons.",
       },
       { status: 400 },
     );

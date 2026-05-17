@@ -123,7 +123,7 @@ model Delivery {
   method      String // DIGITAL | SCANNED_ONLINE | STANDARD | EXPRESS
   address     String?
   trackingId  String?
-  /// Admin-uploaded scanned agreement PDF for SCANNED_ONLINE delivery; customer downloads from their account.
+  /// Admin-uploaded executed agreement PDF for DIGITAL and SCANNED_ONLINE delivery; customer downloads after Out for Delivery.
   scannedCopyBlob         Bytes?
   scannedCopyMime         String?
   scannedCopyOriginalName String?

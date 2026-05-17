@@ -6,6 +6,10 @@ import { loadAgreement, uploadDraftCheckoutReady } from "@/lib/agreement";
 import { StatusTimeline } from "./status-timeline";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
+import {
+  agreementStatusAllowsExecutedCopyDownload,
+  deliveryUsesExecutedCopyUpload,
+} from "@/lib/delivery-executed-copy";
 import { formatDate, formatINR } from "@/lib/utils";
 
 export default async function AgreementStatusPage({
@@ -109,9 +113,20 @@ export default async function AgreementStatusPage({
             {delivery?.trackingId && (
               <KV label="Tracking" value={delivery.trackingId} />
             )}
-            {delivery?.method === "SCANNED_ONLINE" && (
+            {deliveryUsesExecutedCopyUpload(delivery?.method) && (
               <>
-                {delivery.scannedCopyUploadedAt ? (
+                {!agreementStatusAllowsExecutedCopyDownload(
+                  parsed.agreement.status,
+                ) ? (
+                  <p className="pt-1 text-xs text-slate-500">
+                    Once e-stamping and Aadhaar e-sign are done, your executed
+                    PDF will be downloadable from{" "}
+                    <span className="font-medium text-slate-700">
+                      Out for Delivery
+                    </span>{" "}
+                    onward.
+                  </p>
+                ) : delivery.scannedCopyUploadedAt ? (
                   <div className="pt-2">
                     <Button asChild variant="brand" size="lg" className="w-full">
                       <a
@@ -119,7 +134,9 @@ export default async function AgreementStatusPage({
                         download
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        Download scanned copy
+                        {delivery?.method === "DIGITAL"
+                          ? "Download digital copy"
+                          : "Download scanned copy"}
                       </a>
                     </Button>
                     {delivery.scannedCopyOriginalName ? (
@@ -130,7 +147,8 @@ export default async function AgreementStatusPage({
                   </div>
                 ) : (
                   <p className="pt-1 text-xs text-slate-500">
-                    Your scanned PDF will appear here once our team uploads it.
+                    Your finalized PDF will appear here shortly after our team
+                    uploads it.
                   </p>
                 )}
               </>
@@ -221,6 +239,6 @@ function deliveryMethodLabel(method: string | null | undefined): string {
       return "Online scanned copy";
     case "DIGITAL":
     default:
-      return "Digital only";
+      return "Digital copy";
   }
 }

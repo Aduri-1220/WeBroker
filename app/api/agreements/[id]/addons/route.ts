@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { deliveryUsesExecutedCopyUpload } from "@/lib/delivery-executed-copy";
 import { computeTotal, PRICING, type DeliveryMethod } from "@/lib/pricing";
 
 const bodySchema = z.object({
@@ -93,14 +94,14 @@ export async function POST(
       update: {
         method: d.delivery,
         address: noCourierAddress ? null : d.deliveryAddress,
-        ...(d.delivery !== "SCANNED_ONLINE"
-          ? {
+        ...(deliveryUsesExecutedCopyUpload(d.delivery)
+          ? {}
+          : {
               scannedCopyBlob: null,
               scannedCopyMime: null,
               scannedCopyOriginalName: null,
               scannedCopyUploadedAt: null,
-            }
-          : {}),
+            }),
       },
     });
     await tx.agreement.update({
