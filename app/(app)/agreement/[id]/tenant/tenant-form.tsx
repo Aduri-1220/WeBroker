@@ -18,7 +18,7 @@ import {
 import { Field } from "@/components/wizard/field";
 import { NavButtons } from "@/components/wizard/nav-buttons";
 import { persistStep } from "@/components/wizard/persist";
-import { tenantSchema, type TenantData } from "@/lib/schemas";
+import { tenantSchema, type TenantData, normalizePanInput } from "@/lib/schemas";
 import { INDIAN_STATES } from "@/lib/constants";
 
 export function TenantForm({
@@ -159,12 +159,15 @@ export function TenantForm({
         >
           <Input
             id="pan"
+            type="text"
+            inputMode="text"
             placeholder="Your PAN, if applicable"
             maxLength={10}
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="characters"
             spellCheck={false}
-            className="uppercase"
-            {...register("pan")}
+            {...register("pan", { setValueAs: normalizePanInput })}
           />
         </Field>
         <Field label="Phone" htmlFor="phone" required error={errors.phone}>

@@ -12,6 +12,25 @@ function emptyNumberToUndefined(val: unknown): unknown {
   return n;
 }
 
+/** Canonical PAN string for inputs + validation: NFKC, strip spaces/dashes, A–Z0–9 only, cap 10. */
+export function normalizePanInput(raw: unknown): string {
+  if (raw == null || raw === "") return "";
+  try {
+    return String(raw)
+      .normalize("NFKC")
+      .replace(/[\s-]/g, "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 10);
+  } catch {
+    return String(raw)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 10);
+  }
+}
+
 export const propertySchema = z.object({
   type: requiredString("Property type is required"),
   bhk: requiredString("BHK configuration is required"),
@@ -63,10 +82,7 @@ const partySchema = z.object({
   occupation: z.string().optional().default(""),
   aadhaarLast4: z.string().regex(/^\d{4}$/, "Last 4 digits of Aadhaar"),
   pan: z.preprocess(
-    (val) => {
-      if (val == null || val === undefined) return "";
-      return String(val).trim().toUpperCase();
-    },
+    normalizePanInput,
     z.union([
       z.literal(""),
       z
