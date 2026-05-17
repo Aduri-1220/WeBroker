@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -36,7 +37,8 @@ export function TermsForm({
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
     watch,
   } = useForm<TermsData>({
     resolver: zodResolver(termsSchema),
@@ -54,6 +56,8 @@ export function TermsForm({
     },
   });
 
+  useUnsavedChangesWarning(isDirty);
+
   const rent = Number(watch("monthlyRent") || 0);
   const deposit = Number(watch("securityDeposit") || 0);
   const maintenanceIncluded = !!watch("maintenanceIncluded");
@@ -63,6 +67,7 @@ export function TermsForm({
     const ok = await persistStep(agreementId, "terms", data);
     setSubmitting(false);
     if (ok) {
+      reset(data);
       toast.success("Terms saved");
       router.push(`/agreement/${agreementId}/clauses`);
     }
@@ -262,6 +267,7 @@ export function TermsForm({
       <NavButtons
         backHref={`/agreement/${agreementId}/tenant`}
         submitting={submitting}
+        unsavedChanges={isDirty}
       />
     </form>
   );

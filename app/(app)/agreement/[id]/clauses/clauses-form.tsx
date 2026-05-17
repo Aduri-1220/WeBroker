@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -28,10 +29,18 @@ export function ClausesForm({
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
 
-  const { handleSubmit, setValue, watch } = useForm<ClausesData>({
+  const {
+    handleSubmit,
+    setValue,
+    watch,
+    reset: resetForm,
+    formState: { isDirty },
+  } = useForm<ClausesData>({
     resolver: zodResolver(clausesSchema),
     defaultValues: initial,
   });
+
+  useUnsavedChangesWarning(isDirty);
 
   const clauses = watch("clauses");
 
@@ -84,6 +93,7 @@ export function ClausesForm({
     const ok = await persistStep(agreementId, "clauses", data);
     setSubmitting(false);
     if (ok) {
+      resetForm(data);
       toast.success("Clauses saved");
       router.push(`/agreement/${agreementId}/witnesses`);
     }
@@ -207,6 +217,7 @@ export function ClausesForm({
       <NavButtons
         backHref={`/agreement/${agreementId}/terms`}
         submitting={submitting}
+        unsavedChanges={isDirty}
       />
     </form>
   );

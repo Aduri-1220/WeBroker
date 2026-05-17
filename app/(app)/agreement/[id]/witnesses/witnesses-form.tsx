@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -26,7 +27,8 @@ export function WitnessesForm({
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
   } = useForm<WitnessesData>({
     resolver: zodResolver(witnessesSchema),
     defaultValues: initial ?? { witnesses: [] },
@@ -37,21 +39,35 @@ export function WitnessesForm({
     name: "witnesses",
   });
 
+  useUnsavedChangesWarning(isDirty);
+
   async function onSubmit(data: WitnessesData) {
     setSubmitting(true);
     const ok = await persistStep(agreementId, "witnesses", data);
     setSubmitting(false);
     if (ok) {
+      reset(data);
       toast.success("Witnesses saved");
       router.push(`/agreement/${agreementId}/preview`);
     }
   }
 
   async function skip() {
+    if (
+      isDirty &&
+      !window.confirm(
+        "You have unsaved witness details. Skip without saving them?",
+      )
+    ) {
+      return;
+    }
     setSubmitting(true);
     const ok = await persistStep(agreementId, "witnesses", { witnesses: [] });
     setSubmitting(false);
-    if (ok) router.push(`/agreement/${agreementId}/preview`);
+    if (ok) {
+      reset({ witnesses: [] });
+      router.push(`/agreement/${agreementId}/preview`);
+    }
   }
 
   return (
@@ -155,6 +171,7 @@ export function WitnessesForm({
         submitting={submitting}
         onSkip={skip}
         skipLabel="Skip witnesses"
+        unsavedChanges={isDirty}
       />
     </form>
   );

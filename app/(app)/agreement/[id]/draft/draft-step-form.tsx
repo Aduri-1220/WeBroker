@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { UploadCloud, AlertTriangle, Lightbulb, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,7 +103,7 @@ function UploadDraftCheckoutForm({
     setValue,
     watch,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<UploadFastTrackStep1Data>({
     resolver: zodResolver(uploadFastTrackStep1Schema),
     defaultValues: {
@@ -126,6 +127,9 @@ function UploadDraftCheckoutForm({
   const stateVal = watch("state");
   const stampVal = watch("stampValue");
   const rentExc = watch("rentExcludingMaintenance");
+
+  const draftHasUnsaved = isDirty || pickedFile != null;
+  useUnsavedChangesWarning(draftHasUnsaved);
 
   async function onSubmit(values: UploadFastTrackStep1Data) {
     if (!pickedFile && !hasUploadedDraft && !existingFileName) {
@@ -555,6 +559,7 @@ function UploadDraftCheckoutForm({
         backHref="/dashboard"
         submitLabel="Save and continue"
         submitting={submitting}
+        unsavedChanges={draftHasUnsaved}
       />
     </form>
   );
@@ -575,6 +580,9 @@ function OptionalDraftForm({
   const [submitting, setSubmitting] = useState(false);
   const [pickedFile, setPickedFile] = useState<File | null>(null);
   const [overrideIntent, setOverrideIntent] = useState(false);
+
+  const optionalDraftDirty = pickedFile != null || overrideIntent;
+  useUnsavedChangesWarning(optionalDraftDirty);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -721,6 +729,7 @@ function OptionalDraftForm({
         backHref="/dashboard"
         submitLabel="Save and continue"
         submitting={submitting}
+        unsavedChanges={optionalDraftDirty}
       />
     </form>
   );

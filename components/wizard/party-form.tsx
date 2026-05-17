@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -40,7 +41,8 @@ export function PartyForm({
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
   } = useForm<OwnerData>({
     resolver: zodResolver(ownerSchema),
     defaultValues:
@@ -62,11 +64,14 @@ export function PartyForm({
       } as OwnerData),
   });
 
+  useUnsavedChangesWarning(isDirty);
+
   async function onSubmit(data: OwnerData) {
     setSubmitting(true);
     const ok = await persistStep(agreementId, kind, data);
     setSubmitting(false);
     if (ok) {
+      reset(data);
       toast.success("Owner details saved");
       router.push(`/agreement/${agreementId}/${nextStep}`);
     }
@@ -216,6 +221,7 @@ export function PartyForm({
       <NavButtons
         backHref={`/agreement/${agreementId}/${backStep}`}
         submitting={submitting}
+        unsavedChanges={isDirty}
       />
     </form>
   );

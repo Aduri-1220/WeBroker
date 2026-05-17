@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -34,7 +35,8 @@ export function TenantForm({
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
   } = useForm<TenantData>({
     resolver: zodResolver(tenantSchema),
     defaultValues:
@@ -63,11 +65,14 @@ export function TenantForm({
     name: "familyMembers",
   });
 
+  useUnsavedChangesWarning(isDirty);
+
   async function onSubmit(data: TenantData) {
     setSubmitting(true);
     const ok = await persistStep(agreementId, "tenant", data);
     setSubmitting(false);
     if (ok) {
+      reset(data);
       toast.success("Tenant details saved");
       router.push(`/agreement/${agreementId}/terms`);
     }
@@ -288,6 +293,7 @@ export function TenantForm({
       <NavButtons
         backHref={`/agreement/${agreementId}/owner`}
         submitting={submitting}
+        unsavedChanges={isDirty}
       />
     </form>
   );

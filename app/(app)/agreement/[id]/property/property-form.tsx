@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -44,7 +45,8 @@ export function PropertyForm({
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    reset,
+    formState: { errors, isDirty },
     watch,
     setValue,
   } = useForm<PropertyData>({
@@ -71,6 +73,8 @@ export function PropertyForm({
       } as PropertyData),
   });
 
+  useUnsavedChangesWarning(isDirty);
+
   const {
     fields: furnitureFields,
     append: appendFurniture,
@@ -87,6 +91,7 @@ export function PropertyForm({
     const ok = await persistStep(agreementId, "property", data);
     setSubmitting(false);
     if (ok) {
+      reset(data);
       toast.success("Property details saved");
       router.push(`/agreement/${agreementId}/owner`);
     }
@@ -416,6 +421,7 @@ export function PropertyForm({
         backHref={stepBackHref ?? `/agreement/${agreementId}/draft`}
         submitLabel="Save & continue"
         submitting={submitting}
+        unsavedChanges={isDirty}
       />
     </form>
   );
