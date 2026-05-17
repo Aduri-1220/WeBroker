@@ -62,10 +62,22 @@ const partySchema = z.object({
   }),
   occupation: z.string().optional().default(""),
   aadhaarLast4: z.string().regex(/^\d{4}$/, "Last 4 digits of Aadhaar"),
-  pan: z
-    .string()
-    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter a valid PAN")
-    .or(z.literal("")),
+  pan: z.preprocess(
+    (val) => {
+      if (val == null || val === undefined) return "";
+      return String(val).trim().toUpperCase();
+    },
+    z.union([
+      z.literal(""),
+      z
+        .string()
+        .length(10, "PAN must be exactly 10 characters")
+        .regex(
+          /^[A-Z]{5}[0-9]{4}[A-Z]$/,
+          "Invalid PAN: use 5 letters, then 4 digits, then 1 letter",
+        ),
+    ]),
+  ),
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit phone"),
   email: z.string().email("Enter a valid email"),
   addressLine1: requiredString("Address is required"),

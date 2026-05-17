@@ -148,10 +148,18 @@ export function PartyForm({
             {...register("aadhaarLast4")}
           />
         </Field>
-        <Field label="PAN" htmlFor="pan" error={errors.pan}>
+        <Field
+          label="PAN"
+          htmlFor="pan"
+          error={errors.pan}
+          hint="Optional. 10 characters: five letters, four digits, one letter (stored in capitals)."
+        >
           <Input
             id="pan"
-            placeholder="ABCDE1234F"
+            placeholder="Your PAN, if applicable"
+            maxLength={10}
+            autoComplete="off"
+            spellCheck={false}
             className="uppercase"
             {...register("pan")}
           />
