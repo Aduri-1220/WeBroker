@@ -11,7 +11,7 @@ export function SiteFooter() {
         </div>
         <p className="text-center text-[11px] text-stone-500 sm:text-xs">
           © {new Date().getFullYear()} WeBroker Mediation Pvt. Ltd. · Rental
-          agreements, e-Stamped &amp; filed.
+          agreements with e-stamp &amp; e-sign.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-stone-500 sm:gap-4 sm:text-xs">
           <a href="#" className="hover:text-stone-800">

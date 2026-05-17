@@ -29,6 +29,9 @@ export function SiteHeader() {
           <a href="#how-it-works" className="transition hover:text-slate-900">
             How it works
           </a>
+          <a href="#faq" className="transition hover:text-slate-900">
+            FAQ
+          </a>
           <a href="#get-started" className="transition hover:text-slate-900">
             Get started
           </a>

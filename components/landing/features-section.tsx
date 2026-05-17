@@ -30,12 +30,12 @@ const FEATURES: Array<{ icon: LucideIcon; title: string; body: string }> = [
   {
     icon: Gavel,
     title: "Language you can rely on",
-    body: "Tenure, notice, indemnity and add-ons are reviewed by counsel so the agreement stands up if you ever need proof.",
+    body: "Tenure, notice, indemnity, and add-ons follow widely used residential patterns so the deed reads clearly if you ever need it as proof.",
   },
   {
     icon: Stamp,
-    title: "Official stamp and filing, done for you",
-    body: "We affix a valid state e-Stamp and file with the Sub-Registrar — you walk away with something you can actually use.",
+    title: "Stamp duty, surfaced clearly",
+    body: "We attach the correct state e-stamp where online purchase is supported and show duties as a transparent line item — no last-minute surprises.",
   },
   {
     icon: Banknote,
@@ -59,12 +59,12 @@ export function FeaturesSection() {
             className="mt-3 text-balance text-2xl font-semibold text-stone-900 sm:text-4xl md:text-5xl"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            Clarity for you, not complexity for lawyers.
+            Clarity for you, not walls of fine print.
           </h2>
           <p className="mt-3 text-sm text-stone-600 sm:mt-4 sm:text-base">
             We are not a property listing site. We are the neutral layer that
-            helps you draft, sign, e-Stamp and file — so your rental
-            story is straightforward from day one.
+            helps you draft, sign, and e-stamp — so your rental story stays
+            straightforward from day one.
           </p>
         </div>
 
