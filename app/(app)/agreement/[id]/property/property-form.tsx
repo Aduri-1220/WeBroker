@@ -326,6 +326,7 @@ export function PropertyForm({
               >
                 <Checkbox
                   id={id}
+                  className="size-5 rounded-none [&_svg]:size-3.5"
                   checked={checked}
                   onCheckedChange={(next) => {
                     if (next === "indeterminate") return;
