@@ -40,11 +40,10 @@ export function TenantForm({
   } = useForm<TenantData>({
     resolver: zodResolver(tenantSchema),
     defaultValues:
-      initial ??
+      initial ??      
       ({
         fullName: "",
         fatherName: "",
-        age: 0,
         gender: "Male",
         occupation: "",
         aadhaarLast4: "",
@@ -57,7 +56,7 @@ export function TenantForm({
         pincode: "",
         employer: "",
         familyMembers: [],
-      } as TenantData),
+      } as unknown as TenantData),
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -98,6 +97,7 @@ export function TenantForm({
             type="number"
             min={18}
             max={120}
+            placeholder="e.g. 42"
             {...register("age")}
           />
         </Field>
@@ -222,7 +222,13 @@ export function TenantForm({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => append({ name: "", relation: "", age: 0 })}
+            onClick={() =>
+              append({
+                name: "",
+                relation: "",
+                age: undefined as unknown as number,
+              })
+            }
           >
             <Plus className="h-4 w-4" />
             Add member
@@ -272,6 +278,8 @@ export function TenantForm({
                     id={`familyMembers.${i}.age`}
                     type="number"
                     min={0}
+                    max={120}
+                    placeholder="e.g. 8"
                     {...register(`familyMembers.${i}.age` as const)}
                   />
                 </Field>

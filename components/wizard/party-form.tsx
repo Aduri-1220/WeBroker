@@ -50,7 +50,6 @@ export function PartyForm({
       ({
         fullName: "",
         fatherName: "",
-        age: 0,
         gender: "Male",
         occupation: "",
         aadhaarLast4: "",
@@ -61,7 +60,7 @@ export function PartyForm({
         city: "",
         state: "",
         pincode: "",
-      } as OwnerData),
+      } as unknown as OwnerData),
   });
 
   useUnsavedChangesWarning(isDirty);

@@ -3,6 +3,15 @@ import { INDIAN_STATES, STAMP_DENOMINATIONS } from "./constants";
 
 const requiredString = (msg: string) => z.string().min(1, msg);
 
+/** HTML number inputs often yield "" or NaN; treat as missing instead of coercing to 0. */
+function emptyNumberToUndefined(val: unknown): unknown {
+  if (val === "" || val === null || val === undefined) return undefined;
+  if (typeof val === "number" && Number.isNaN(val)) return undefined;
+  const n = typeof val === "string" ? Number(val.trim()) : val;
+  if (typeof n === "number" && Number.isNaN(n)) return undefined;
+  return n;
+}
+
 export const propertySchema = z.object({
   type: requiredString("Property type is required"),
   bhk: requiredString("BHK configuration is required"),
@@ -37,7 +46,17 @@ export type PropertyData = z.infer<typeof propertySchema>;
 const partySchema = z.object({
   fullName: requiredString("Full name is required"),
   fatherName: z.string().optional().default(""),
-  age: z.coerce.number().int().min(18, "Must be at least 18").max(120),
+  age: z.preprocess(
+    emptyNumberToUndefined,
+    z
+      .number({
+        required_error: "Age is required",
+        invalid_type_error: "Age is required",
+      })
+      .int()
+      .min(18, "Must be at least 18")
+      .max(120),
+  ),
   gender: z.enum(["Male", "Female", "Other"], {
     errorMap: () => ({ message: "Gender is required" }),
   }),
@@ -65,7 +84,17 @@ export const tenantSchema = partySchema.extend({
       z.object({
         name: requiredString("Name required"),
         relation: requiredString("Relation required"),
-        age: z.coerce.number().int().min(0).max(120),
+        age: z.preprocess(
+          emptyNumberToUndefined,
+          z
+            .number({
+              required_error: "Age is required",
+              invalid_type_error: "Age is required",
+            })
+            .int()
+            .min(0)
+            .max(120),
+        ),
       }),
     )
     .default([]),
