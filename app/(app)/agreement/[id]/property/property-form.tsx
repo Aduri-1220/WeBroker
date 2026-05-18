@@ -5,7 +5,7 @@ import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus, Sofa, Trash2 } from "lucide-react";
+import { Plus, Sofa, Trash2, Minus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,15 +21,16 @@ import { NavButtons } from "@/components/wizard/nav-buttons";
 import { persistStep } from "@/components/wizard/persist";
 import { propertySchema, type PropertyData } from "@/lib/schemas";
 import {
-  AMENITIES,
   BHK_OPTIONS,
-  COMMERCIAL_AMENITIES,
   COMMERCIAL_FURNISHING_OPTIONS,
   FURNISHING_OPTIONS,
   INDIAN_STATES,
   PROPERTY_TYPES,
 } from "@/lib/constants";
-import { getPropertyTypeCategory } from "@/lib/property-type-category";
+import {
+  amenitiesForPropertyCategory,
+  getPropertyTypeCategory,
+} from "@/lib/property-type-category";
 
 export function PropertyForm({
   agreementId,
@@ -52,28 +53,33 @@ export function PropertyForm({
     formState: { errors, isDirty },
     watch,
     setValue,
+    getValues,
   } = useForm<PropertyData>({
     resolver: zodResolver(propertySchema),
-    defaultValues:
-      initial ??
-      ({
-        type: "",
-        bhk: "",
-        bathrooms: 1,
-        furnishing: "",
-        flatNumber: "",
-        floorNumber: "",
-        buildingName: "",
-        addressLine1: "",
-        addressLine2: "",
-        locality: "",
-        city: "",
-        state: "",
-        pincode: "",
-        carpetArea: 0,
-        amenities: [],
-        furnitureSchedule: [],
-      } as PropertyData),
+    defaultValues: initial
+      ? {
+          ...initial,
+          customAmenities: initial.customAmenities ?? [],
+        }
+      : ({
+          type: "",
+          bhk: "",
+          bathrooms: 1,
+          furnishing: "",
+          flatNumber: "",
+          floorNumber: "",
+          buildingName: "",
+          addressLine1: "",
+          addressLine2: "",
+          locality: "",
+          city: "",
+          state: "",
+          pincode: "",
+          carpetArea: 0,
+          amenities: [],
+          customAmenities: [],
+          furnitureSchedule: [],
+        } as PropertyData),
   });
 
   useUnsavedChangesWarning(isDirty);
@@ -86,6 +92,15 @@ export function PropertyForm({
   } = useFieldArray({
     control,
     name: "furnitureSchedule",
+  });
+
+  const {
+    fields: customAmenityFields,
+    append: appendCustomAmenity,
+    remove: removeCustomAmenity,
+  } = useFieldArray({
+    control,
+    name: "customAmenities",
   });
 
   const amenities = watch("amenities") || [];
@@ -106,13 +121,10 @@ export function PropertyForm({
     replaceFurnitureSchedule([]);
   }, [isWarehouse, furnitureFields.length, replaceFurnitureSchedule]);
 
-  const amenityChoices = useMemo(() => {
-    if (isResidential) return AMENITIES;
-    if (isCommercial) return [...AMENITIES, ...COMMERCIAL_AMENITIES];
-    if (isWarehouse) return [...COMMERCIAL_AMENITIES];
-    if (isLandBuilding) return [...AMENITIES, ...COMMERCIAL_AMENITIES];
-    return AMENITIES;
-  }, [isResidential, isCommercial, isWarehouse, isLandBuilding]);
+  const amenityChoices = useMemo(
+    () => [...amenitiesForPropertyCategory(category)],
+    [category],
+  );
 
   const furnishingChoices = useMemo(() => {
     if (isCommercial) return [...COMMERCIAL_FURNISHING_OPTIONS];
@@ -128,6 +140,16 @@ export function PropertyForm({
     }
   }, [isResidential, setValue]);
 
+  /** Amenities are checklist-only; drop anything not allowed for this property type. */
+  useEffect(() => {
+    const allowed = new Set(amenitiesForPropertyCategory(category));
+    const cur = getValues("amenities") ?? [];
+    const next = cur.filter((a) => allowed.has(a));
+    if (next.length !== cur.length) {
+      setValue("amenities", next, { shouldValidate: false, shouldDirty: false });
+    }
+  }, [category, getValues, setValue]);
+
   async function onSubmit(data: PropertyData) {
     setSubmitting(true);
     const ok = await persistStep(agreementId, "property", data);
@@ -137,6 +159,17 @@ export function PropertyForm({
       toast.success("Property details saved");
       router.push(`/agreement/${agreementId}/owner`);
     }
+  }
+
+  function bumpCustomAmenityUnits(index: number, delta: number) {
+    const path = `customAmenities.${index}.units` as const;
+    const raw = getValues(path);
+    const cur =
+      typeof raw === "number" && Number.isFinite(raw)
+        ? Math.trunc(raw)
+        : Number(raw) || 1;
+    const next = Math.min(999, Math.max(1, cur + delta));
+    setValue(path, next, { shouldDirty: true, shouldValidate: true });
   }
 
   function setAmenityChecked(value: string, checked: boolean) {
@@ -433,8 +466,8 @@ export function PropertyForm({
       <div>
         <div className="text-sm font-medium text-slate-800">Amenities</div>
         <p className="mt-1 text-xs text-slate-500">
-          Optional — select all that apply. These show up in the inventory
-          section of the agreement.
+          Tick standard options below, or add your own extras with quantity.
+          Everything listed here appears in the agreement schedule.
         </p>
         <div
           className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3"
@@ -464,6 +497,105 @@ export function PropertyForm({
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-6 rounded-lg border border-dashed border-slate-200 bg-slate-50/90 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="text-sm font-medium text-slate-800">
+                Additional amenities
+              </div>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Optional — name anything not in the list and how many (e.g.
+                bike racks, shelves).
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                appendCustomAmenity({ item: "", units: 1 })
+              }
+            >
+              <Plus className="h-4 w-4" />
+              Add custom
+            </Button>
+          </div>
+
+          {customAmenityFields.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {customAmenityFields.map((row, i) => (
+                <div
+                  key={row.id}
+                  className="grid items-end gap-3 rounded-lg border bg-white p-3 sm:grid-cols-[1fr_auto_auto]"
+                >
+                  <Field
+                    label="Description"
+                    htmlFor={`customAmenities.${i}.item`}
+                    required
+                    error={errors.customAmenities?.[i]?.item}
+                  >
+                    <Input
+                      id={`customAmenities.${i}.item`}
+                      placeholder="e.g. Covered bike rack"
+                      {...register(`customAmenities.${i}.item` as const)}
+                    />
+                  </Field>
+                  <Field
+                    label="Count"
+                    htmlFor={`customAmenities.${i}.units`}
+                    required
+                    error={errors.customAmenities?.[i]?.units}
+                    className="sm:max-w-[11rem]"
+                  >
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-9 shrink-0 rounded-none"
+                        onClick={() => bumpCustomAmenityUnits(i, -1)}
+                        aria-label="Decrease count"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        id={`customAmenities.${i}.units`}
+                        type="number"
+                        min={1}
+                        max={999}
+                        className="text-center tabular-nums"
+                        {...register(`customAmenities.${i}.units` as const, {
+                          valueAsNumber: true,
+                        })}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="size-9 shrink-0 rounded-none"
+                        onClick={() => bumpCustomAmenityUnits(i, 1)}
+                        aria-label="Increase count"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="justify-self-end sm:justify-self-auto"
+                    onClick={() => removeCustomAmenity(i)}
+                    aria-label="Remove row"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 

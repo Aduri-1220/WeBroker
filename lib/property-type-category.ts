@@ -1,4 +1,4 @@
-import { PROPERTY_TYPES } from "./constants";
+import { AMENITIES, COMMERCIAL_AMENITIES, PROPERTY_TYPES } from "./constants";
 
 export type PropertyTypeCategory =
   | "residential"
@@ -45,4 +45,22 @@ export function getPropertyTypeCategory(
 
 export function isRegisteredPropertyType(type: string): boolean {
   return (PROPERTY_TYPES as readonly string[]).includes(type);
+}
+
+/** Allowed amenity labels for the agreement property step — checklist only, no free-text values. */
+export function amenitiesForPropertyCategory(
+  cat: PropertyTypeCategory,
+): readonly string[] {
+  switch (cat) {
+    case "residential":
+      return AMENITIES;
+    case "commercial":
+      return [...AMENITIES, ...COMMERCIAL_AMENITIES];
+    case "warehouse":
+      return [...COMMERCIAL_AMENITIES];
+    case "land_building":
+      return [...AMENITIES, ...COMMERCIAL_AMENITIES];
+    default:
+      return AMENITIES;
+  }
 }

@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { INDIAN_STATES, STAMP_DENOMINATIONS } from "./constants";
-import { getPropertyTypeCategory } from "./property-type-category";
+import {
+  amenitiesForPropertyCategory,
+  getPropertyTypeCategory,
+} from "./property-type-category";
 
 const requiredString = (msg: string) => z.string().min(1, msg);
 
@@ -57,6 +60,18 @@ export const propertySchema = z
         .max(100000),
     ),
     amenities: z.array(z.string()).default([]),
+    /** User-entered extras with quantity (not limited to predefined checklist). */
+    customAmenities: z
+      .array(
+        z.object({
+          item: z.preprocess(
+            (val) => (typeof val === "string" ? val.trim() : val),
+            requiredString("Describe the amenity"),
+          ),
+          units: z.coerce.number().int().min(1).max(999),
+        }),
+      )
+      .default([]),
     furnitureSchedule: z
       .array(
         z.object({
@@ -207,11 +222,21 @@ export const propertySchema = z
             ? 1
             : 0;
 
+    const amenitiesAllowed = new Set(amenitiesForPropertyCategory(cat));
+    const amenities = data.amenities.filter((a) => amenitiesAllowed.has(a));
+
+    const customAmenities = data.customAmenities.map((row) => ({
+      item: row.item.trim(),
+      units: Math.min(Math.max(Math.trunc(row.units), 1), 999),
+    }));
+
     return {
       ...data,
       bhk,
       furnishing,
       bathrooms: bathroomsComputed,
+      amenities,
+      customAmenities,
     };
   });
 export type PropertyData = z.output<typeof propertySchema>;

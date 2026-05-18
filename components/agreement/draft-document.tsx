@@ -200,6 +200,15 @@ export function DraftDocument({
               <em>Amenities:</em> {property.amenities.join(", ")}
             </div>
           )}
+          {property?.customAmenities &&
+            property.customAmenities.length > 0 && (
+              <div>
+                <em>Additional amenities:</em>{" "}
+                {property.customAmenities
+                  .map((c) => `${c.item} (×${c.units})`)
+                  .join(", ")}
+              </div>
+            )}
         </div>
       </DraftSection>
 

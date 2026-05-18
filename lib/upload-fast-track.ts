@@ -81,6 +81,7 @@ export function buildUploadFastTrackPayload(input: UploadFastTrackInput): {
     pincode: "560001",
     carpetArea: 500,
     amenities: [],
+    customAmenities: [],
     furnitureSchedule: [],
   };
 
