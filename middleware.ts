@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { rateLimitIdentity } from "@/lib/rate-limit";
 
 function clientIp(req: NextRequest): string {
@@ -39,6 +40,30 @@ const RATE: Record<string, { prefix: string; max: number; windowSec: number }> =
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+
+  /** Staff should not remain on customer onboarding (JWT carries isWorker / isAdmin). */
+  if (path === "/onboarding" || path.startsWith("/onboarding/")) {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (secret) {
+      const token = (await getToken({
+        req,
+        secret,
+      })) as { isWorker?: boolean; isAdmin?: boolean } | null;
+      if (token?.isWorker === true) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/worker";
+        url.search = "";
+        return withSecurityHeaders(NextResponse.redirect(url));
+      }
+      if (token?.isAdmin === true) {
+        const url = req.nextUrl.clone();
+        url.pathname = "/dashboard";
+        url.search = "";
+        return withSecurityHeaders(NextResponse.redirect(url));
+      }
+    }
+  }
+
   const rule = RATE[path];
 
   if (rule) {
@@ -66,6 +91,8 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/onboarding",
+    "/onboarding/:path*",
     "/api/sign-up",
     "/api/auth/forgot-password",
     "/api/auth/resend-verification",

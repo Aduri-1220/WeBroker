@@ -33,7 +33,13 @@ export function SiteFooter() {
             href="/sign-in?callbackUrl=/admin"
             className="hover:text-stone-800"
           >
-            Staff sign in
+            Admin sign in
+          </Link>
+          <Link
+            href="/sign-in?callbackUrl=/worker"
+            className="hover:text-stone-800"
+          >
+            Worker sign in
           </Link>
         </div>
       </div>

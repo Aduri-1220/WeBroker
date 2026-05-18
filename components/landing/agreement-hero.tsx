@@ -135,7 +135,14 @@ function HeroCopy() {
           href="/sign-in?callbackUrl=/admin"
           className="font-medium text-brand-700 underline-offset-4 hover:text-brand-800 hover:underline"
         >
-          Sign in to admin
+          Admin
+        </Link>{" "}
+        ·{" "}
+        <Link
+          href="/sign-in?callbackUrl=/worker"
+          className="font-medium text-brand-700 underline-offset-4 hover:text-brand-800 hover:underline"
+        >
+          Worker
         </Link>
       </motion.p>
 
