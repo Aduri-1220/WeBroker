@@ -29,15 +29,15 @@ const ADD_ONS: Array<{
     title: "Courier delivery",
     desc: "Standard or express hardcopy to the address you provide.",
     image: "/images/add-ons/courier-delivery.png",
-    alt: "Kraft envelopes and seal stamp — courier delivery of agreements",
-    accent: "from-stone-200/30 via-stone-100/40 to-amber-50/35",
+    alt: "Sealed envelopes and parcel box — express courier delivery of agreement copies",
+    accent: "from-amber-100/35 via-stone-200/25 to-emerald-100/25",
   },
   {
     title: "Extra original copy",
     desc: "Additional stamped original when you need more than one set.",
     image: "/images/add-ons/extra-original-copy.png",
-    alt: "Two wax-sealed scrolls — duplicate original copies",
-    accent: "from-orange-50/40 via-amber-100/35 to-stone-100/35",
+    alt: "Two wax-sealed document envelopes — an extra original set for mailing or filing",
+    accent: "from-amber-100/40 via-orange-50/35 to-rose-100/25",
   },
 ];
 
