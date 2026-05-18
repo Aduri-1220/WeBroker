@@ -119,7 +119,7 @@ export function PropertyForm({
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Select property" />
                 </SelectTrigger>
                 <SelectContent>
                   {PROPERTY_TYPES.map((t) => (

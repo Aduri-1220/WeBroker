@@ -37,12 +37,13 @@ export const INDIAN_STATES: {
 export const STAMP_DENOMINATIONS = [100, 200, 300, 500, 1000];
 
 export const PROPERTY_TYPES = [
-  "Apartment / Flat",
-  "Independent House / Villa",
-  "Independent Floor / Builder Floor",
-  "PG / Hostel Room",
-  "Studio Apartment",
-  "Commercial Space",
+  "Shop",
+  "Office",
+  "Apartment/Flat",
+  "Godown",
+  "Independent House",
+  "Land+Building/Shed",
+  "Studio Apartments",
 ];
 
 export const BHK_OPTIONS = [

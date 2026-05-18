@@ -66,7 +66,7 @@ export function buildUploadFastTrackPayload(input: UploadFastTrackInput): {
   const state = input.state;
 
   const property: PropertyData = {
-    type: "Apartment / Flat",
+    type: "Apartment/Flat",
     bhk: "2 BHK",
     bathrooms: 2,
     furnishing: "Semi-Furnished",
