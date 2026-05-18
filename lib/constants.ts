@@ -61,6 +61,24 @@ export const FURNISHING_OPTIONS = [
   "Fully-Furnished",
 ];
 
+/** Shop / office — property form uses this when type is commercial. */
+export const COMMERCIAL_FURNISHING_OPTIONS = [
+  "Bare shell",
+  "Warm shell",
+  "Semi-Fitted",
+  "Fully fitted / plug & play",
+];
+
+export const COMMERCIAL_AMENITIES = [
+  "Fire safety / sprinklers",
+  "Loading / unloading bay",
+  "Three-phase power",
+  "DG / generator backup",
+  "CCTV",
+  "Elevator / goods lift",
+  "Water supply",
+];
+
 export const AMENITIES = [
   "Parking",
   "Lift",

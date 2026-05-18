@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUnsavedChangesWarning } from "@/hooks/use-unsaved-changes-warning";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,10 +23,13 @@ import { propertySchema, type PropertyData } from "@/lib/schemas";
 import {
   AMENITIES,
   BHK_OPTIONS,
+  COMMERCIAL_AMENITIES,
+  COMMERCIAL_FURNISHING_OPTIONS,
   FURNISHING_OPTIONS,
   INDIAN_STATES,
   PROPERTY_TYPES,
 } from "@/lib/constants";
+import { getPropertyTypeCategory } from "@/lib/property-type-category";
 
 export function PropertyForm({
   agreementId,
@@ -79,12 +82,51 @@ export function PropertyForm({
     fields: furnitureFields,
     append: appendFurniture,
     remove: removeFurniture,
+    replace: replaceFurnitureSchedule,
   } = useFieldArray({
     control,
     name: "furnitureSchedule",
   });
 
   const amenities = watch("amenities") || [];
+  const propertyType = watch("type");
+  const category = useMemo(
+    () => getPropertyTypeCategory(propertyType),
+    [propertyType],
+  );
+  const isResidential =
+    category === "residential" || category === "unknown";
+  const isCommercial = category === "commercial";
+  const isWarehouse = category === "warehouse";
+  const isLandBuilding = category === "land_building";
+
+  useEffect(() => {
+    if (!isWarehouse) return;
+    if (furnitureFields.length === 0) return;
+    replaceFurnitureSchedule([]);
+  }, [isWarehouse, furnitureFields.length, replaceFurnitureSchedule]);
+
+  const amenityChoices = useMemo(() => {
+    if (isResidential) return AMENITIES;
+    if (isCommercial) return [...AMENITIES, ...COMMERCIAL_AMENITIES];
+    if (isWarehouse) return [...COMMERCIAL_AMENITIES];
+    if (isLandBuilding) return [...AMENITIES, ...COMMERCIAL_AMENITIES];
+    return AMENITIES;
+  }, [isResidential, isCommercial, isWarehouse, isLandBuilding]);
+
+  const furnishingChoices = useMemo(() => {
+    if (isCommercial) return [...COMMERCIAL_FURNISHING_OPTIONS];
+    if (isWarehouse || isLandBuilding) {
+      return ["Not applicable", ...FURNISHING_OPTIONS];
+    }
+    return [...FURNISHING_OPTIONS];
+  }, [isCommercial, isWarehouse, isLandBuilding]);
+
+  useEffect(() => {
+    if (!isResidential) {
+      setValue("bhk", "", { shouldValidate: false, shouldDirty: false });
+    }
+  }, [isResidential, setValue]);
 
   async function onSubmit(data: PropertyData) {
     setSubmitting(true);
@@ -133,47 +175,76 @@ export function PropertyForm({
           />
         </Field>
 
-        <Field label="Bedrooms (BHK)" htmlFor="bhk" required error={errors.bhk}>
-          <Controller
-            name="bhk"
-            control={control}
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger id="bhk">
-                  <SelectValue placeholder="BHK" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BHK_OPTIONS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </Field>
+        {isResidential ? (
+          <Field
+            label="Bedrooms (BHK)"
+            htmlFor="bhk"
+            required
+            error={errors.bhk}
+          >
+            <Controller
+              name="bhk"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger id="bhk">
+                    <SelectValue placeholder="BHK" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BHK_OPTIONS.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </Field>
+        ) : null}
 
         <Field
-          label="Number of bathrooms"
+          label={
+            isResidential
+              ? "Number of bathrooms"
+              : isWarehouse || isLandBuilding
+                ? "Toilets / restrooms (0 if none)"
+                : "Restrooms / WCs (in demised premises)"
+          }
           htmlFor="bathrooms"
-          required
+          required={
+            isResidential || isCommercial || isWarehouse || isLandBuilding
+          }
           error={errors.bathrooms}
         >
           <Input
             id="bathrooms"
             type="number"
-            min={1}
-            max={20}
-            placeholder="e.g. 2"
-            {...register("bathrooms")}
+            min={isResidential ? 1 : 0}
+            max={99}
+            placeholder={
+              isWarehouse || isLandBuilding
+                ? "e.g. 0"
+                : isCommercial
+                  ? "e.g. 1"
+                  : "e.g. 2"
+            }
+            {...register("bathrooms", {
+              valueAsNumber: true,
+            })}
           />
         </Field>
 
         <Field
-          label="Furnishing"
+          label={
+            isCommercial
+              ? "Fit-out / furnishing"
+              : isWarehouse || isLandBuilding
+                ? "Furnishing (if applicable)"
+                : "Furnishing"
+          }
           htmlFor="furnishing"
-          required
+          required={isResidential || isCommercial}
           error={errors.furnishing}
         >
           <Controller
@@ -182,10 +253,16 @@ export function PropertyForm({
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger id="furnishing">
-                  <SelectValue placeholder="Furnishing status" />
+                  <SelectValue
+                    placeholder={
+                      isWarehouse || isLandBuilding
+                        ? "Optional — default Not applicable"
+                        : "Furnishing status"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {FURNISHING_OPTIONS.map((t) => (
+                  {furnishingChoices.map((t) => (
                     <SelectItem key={t} value={t}>
                       {t}
                     </SelectItem>
@@ -197,7 +274,13 @@ export function PropertyForm({
         </Field>
 
         <Field
-          label="Carpet area (sq. ft.)"
+          label={
+            isWarehouse || isLandBuilding
+              ? "Built-up / warehouse or structure area (sq. ft.)"
+              : isCommercial
+                ? "Built-up / carpet area (sq. ft.)"
+                : "Carpet area (sq. ft.)"
+          }
           htmlFor="carpetArea"
           required
           error={errors.carpetArea}
@@ -212,24 +295,57 @@ export function PropertyForm({
       </div>
 
       <div className="grid gap-5 md:grid-cols-3">
-        <Field label="Flat / House no." htmlFor="flatNumber">
+        <Field
+          label={
+            isCommercial
+              ? "Shop / office / unit no."
+              : isWarehouse
+                ? "Bay / unit no. (optional)"
+                : isLandBuilding
+                  ? "Plot / survey ref. (optional)"
+                  : "Flat / house no."
+          }
+          htmlFor="flatNumber"
+        >
           <Input
             id="flatNumber"
-            placeholder="e.g. A-302"
+            placeholder={
+              isCommercial
+                ? "e.g. G-17, Wing B"
+                : isLandBuilding
+                  ? "Survey / CTS no."
+                  : "e.g. A-302"
+            }
             {...register("flatNumber")}
           />
         </Field>
-        <Field label="Floor" htmlFor="floorNumber">
+        <Field
+          label={isWarehouse ? "Bay / aisle (optional)" : "Floor"}
+          htmlFor="floorNumber"
+        >
           <Input
             id="floorNumber"
-            placeholder="e.g. 3rd"
+            placeholder={
+              isCommercial ? "e.g. Ground, 2nd" : "e.g. 3rd"
+            }
             {...register("floorNumber")}
           />
         </Field>
-        <Field label="Building name" htmlFor="buildingName">
+        <Field
+          label={
+            isCommercial
+              ? "Building / mall / complex name"
+              : isWarehouse || isLandBuilding
+                ? "Premises / estate name (optional)"
+                : "Building name"
+          }
+          htmlFor="buildingName"
+        >
           <Input
             id="buildingName"
-            placeholder="e.g. Lotus Heights"
+            placeholder={
+              isCommercial ? "e.g. Phoenix Mall" : "e.g. Lotus Heights"
+            }
             {...register("buildingName")}
           />
         </Field>
@@ -251,7 +367,11 @@ export function PropertyForm({
       <Field label="Address line 2 (optional)" htmlFor="addressLine2">
         <Input
           id="addressLine2"
-          placeholder="Landmark, area"
+          placeholder={
+            isLandBuilding
+              ? "Survey / Khasra details, gated layout"
+              : "Landmark, area"
+          }
           {...register("addressLine2")}
         />
       </Field>
@@ -321,7 +441,7 @@ export function PropertyForm({
           role="group"
           aria-label="Property amenities"
         >
-          {AMENITIES.map((a) => {
+          {amenityChoices.map((a) => {
             const id = `amenity-${a.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}`;
             const checked = amenities.includes(a);
             return (
@@ -347,75 +467,77 @@ export function PropertyForm({
         </div>
       </div>
 
-      <div className="rounded-xl border bg-slate-50 p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sofa className="h-5 w-5 text-brand-700" />
-            <h3 className="text-sm font-semibold text-slate-900">
-              Schedule I — Furniture &amp; appliances handed over
-            </h3>
+      {!isWarehouse ? (
+        <div className="rounded-xl border bg-slate-50 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sofa className="h-5 w-5 text-brand-700" />
+              <h3 className="text-sm font-semibold text-slate-900">
+                Schedule I — Furniture &amp; appliances handed over
+              </h3>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => appendFurniture({ item: "", units: 1 })}
+            >
+              <Plus className="h-4 w-4" />
+              Add row
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => appendFurniture({ item: "", units: 1 })}
-          >
-            <Plus className="h-4 w-4" />
-            Add row
-          </Button>
-        </div>
-        <p className="mt-1 text-xs text-slate-500">
-          Optional — lists everything the Owner hands over to the Tenant on
-          move-in.
-        </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Optional — lists everything the Owner hands over to the Tenant on
+            move-in.
+          </p>
 
-        {furnitureFields.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {furnitureFields.map((f, i) => (
-              <div
-                key={f.id}
-                className="grid items-end gap-3 rounded-lg border bg-white p-3 sm:grid-cols-[1fr_120px_auto]"
-              >
-                <Field
-                  label="Item"
-                  htmlFor={`furnitureSchedule.${i}.item`}
-                  required
-                  error={errors.furnitureSchedule?.[i]?.item}
+          {furnitureFields.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {furnitureFields.map((f, i) => (
+                <div
+                  key={f.id}
+                  className="grid items-end gap-3 rounded-lg border bg-white p-3 sm:grid-cols-[1fr_120px_auto]"
                 >
-                  <Input
-                    id={`furnitureSchedule.${i}.item`}
-                    placeholder="e.g. Ceiling fan"
-                    {...register(`furnitureSchedule.${i}.item` as const)}
-                  />
-                </Field>
-                <Field
-                  label="Units"
-                  htmlFor={`furnitureSchedule.${i}.units`}
-                  required
-                  error={errors.furnitureSchedule?.[i]?.units}
-                >
-                  <Input
-                    id={`furnitureSchedule.${i}.units`}
-                    type="number"
-                    min={1}
-                    {...register(`furnitureSchedule.${i}.units` as const)}
-                  />
-                </Field>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeFurniture(i)}
-                  aria-label="Remove row"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <Field
+                    label="Item"
+                    htmlFor={`furnitureSchedule.${i}.item`}
+                    required
+                    error={errors.furnitureSchedule?.[i]?.item}
+                  >
+                    <Input
+                      id={`furnitureSchedule.${i}.item`}
+                      placeholder="e.g. Ceiling fan"
+                      {...register(`furnitureSchedule.${i}.item` as const)}
+                    />
+                  </Field>
+                  <Field
+                    label="Units"
+                    htmlFor={`furnitureSchedule.${i}.units`}
+                    required
+                    error={errors.furnitureSchedule?.[i]?.units}
+                  >
+                    <Input
+                      id={`furnitureSchedule.${i}.units`}
+                      type="number"
+                      min={1}
+                      {...register(`furnitureSchedule.${i}.units` as const)}
+                    />
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeFurniture(i)}
+                    aria-label="Remove row"
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       <NavButtons
         backHref={stepBackHref ?? `/agreement/${agreementId}/draft`}
