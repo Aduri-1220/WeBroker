@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 const FAQ_ITEMS = [
   {
@@ -37,7 +39,51 @@ const FAQ_ITEMS = [
   },
 ] as const;
 
+const FAQ_INITIAL_COUNT = 4;
+
+function FaqAccordionRow({
+  item,
+  index,
+}: {
+  item: (typeof FAQ_ITEMS)[number];
+  index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.18) }}
+      className="py-3 sm:py-4"
+    >
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left text-base font-semibold text-stone-900 marker:content-none [&::-webkit-details-marker]:hidden">
+          <span
+            className="text-pretty pr-2"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            {item.q}
+          </span>
+          <span className="mt-0.5 shrink-0 text-brand-600 transition group-open:rotate-45">
+            +
+          </span>
+        </summary>
+        <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:mt-3 sm:text-[15px]">
+          {item.a}
+        </p>
+      </details>
+    </motion.div>
+  );
+}
+
 export function LandingFaqSection() {
+  const [showAllFaq, setShowAllFaq] = useState(false);
+  const total = FAQ_ITEMS.length;
+  const hasMore = total > FAQ_INITIAL_COUNT;
+  const itemsToShow = showAllFaq
+    ? FAQ_ITEMS
+    : FAQ_ITEMS.slice(0, FAQ_INITIAL_COUNT);
+
   return (
     <section
       id="faq"
@@ -60,35 +106,28 @@ export function LandingFaqSection() {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-3xl divide-y divide-stone-200 border-t border-stone-200">
-          {FAQ_ITEMS.map((item, i) => (
-            <motion.div
-              key={item.q}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.35, delay: Math.min(i * 0.04, 0.24) }}
-              className="py-5 sm:py-6"
-            >
-              <details className="group">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-left text-base font-semibold text-stone-900 marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span
-                    className="text-pretty pr-2"
-                    style={{ fontFamily: "var(--font-serif)" }}
-                  >
-                    {item.q}
-                  </span>
-                  <span className="mt-0.5 shrink-0 text-brand-600 transition group-open:rotate-45">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-stone-600 sm:text-[15px]">
-                  {item.a}
-                </p>
-              </details>
-            </motion.div>
+        <div className="mx-auto mt-8 max-w-3xl divide-y divide-stone-200 border-t border-stone-200 sm:mt-10">
+          {itemsToShow.map((item, i) => (
+            <FaqAccordionRow key={item.q} item={item} index={i} />
           ))}
         </div>
+
+        {hasMore ? (
+          <div className="mx-auto mt-6 flex max-w-3xl justify-center sm:mt-8">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-stone-700"
+              onClick={() => setShowAllFaq((v) => !v)}
+              aria-expanded={showAllFaq}
+            >
+              {showAllFaq
+                ? "Show fewer questions"
+                : `Show all ${total} questions`}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </section>
   );
