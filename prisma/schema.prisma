@@ -50,12 +50,13 @@ model VerificationToken {
 // -------- Application models --------
 
 model User {
+  /// Email/password sign-up sets `id` to the same value as `phone`. OAuth keeps a generated CUID unless you later align data manually.
   id            String      @id @default(cuid())
   email         String      @unique
   emailVerified DateTime?
   name          String?
-  /// 10-digit Indian mobile (no country code), collected at email/password sign-up when provided.
-  phone         String?
+  /// 10-digit Indian mobile (no country code). Required at email/password sign-up; @unique for lookup.
+  phone         String?   @unique
   image         String?
   passwordHash  String?
   role          String? // "OWNER" | "TENANT" | "BROKER"

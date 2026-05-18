@@ -123,6 +123,10 @@ export default async function WorkerAgreementDetailPage({
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Customer</CardTitle>
+            <CardDescription>
+              Email/password sign-up uses their 10-digit mobile as database
+              user id. Filter agreements on staff lists by typing that mobile.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <Row label="Name" value={agreement.user.name ?? "—"} />
